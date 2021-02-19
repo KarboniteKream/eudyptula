@@ -1,0 +1,15 @@
+[klemen@nNa-Laptop task01]$ KDIR=/lib/modules/5.10.16-200.fc33.x86_64/build make
+make -C /lib/modules/5.10.16-200.fc33.x86_64/build M=$PWD
+make[1]: Entering directory '/usr/src/kernels/5.10.16-200.fc33.x86_64'
+  CC [M]  /home/klemen/eudyptula/task01/hello.o
+  MODPOST /home/klemen/eudyptula/task01/Module.symvers
+  CC [M]  /home/klemen/eudyptula/task01/hello.mod.o
+  LD [M]  /home/klemen/eudyptula/task01/hello.ko
+make[1]: Leaving directory '/usr/src/kernels/5.10.16-200.fc33.x86_64'
+[klemen@nNa-Laptop task01]$ ~/.bin/sign-file hello.ko
+[klemen@nNa-Laptop task01]$ sudo insmod hello.ko
+[klemen@nNa-Laptop task01]$ dmesg | tail -2
+[ 2065.967754] hello: loading out-of-tree module taints kernel.
+[ 2065.968027] Hello World!
+[klemen@nNa-Laptop task01]$ sudo rmmod hello.ko
+[klemen@nNa-Laptop task01]$ 
