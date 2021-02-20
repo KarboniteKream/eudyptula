@@ -1,0 +1,32 @@
+From 4648a777c5c4e2a18352a02727d581dc8c834f7a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Klemen=20Ko=C5=A1ir?= <klemen.kosir@kream.io>
+Date: Sat, 20 Feb 2021 18:55:23 +0900
+Subject: [PATCH] kbuild: Make the kernel version conform to Eudyptula
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This patch modifies `EXTRAVERSION` to include '-eudyptula',
+which is the only acceptable version by Little Penguin.
+
+Signed-off-by: Klemen Košir <klemen.kosir@kream.io>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index de1acaefe87e..78a3d70f2303 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,7 +2,7 @@
+ VERSION = 5
+ PATCHLEVEL = 11
+ SUBLEVEL = 0
+-EXTRAVERSION =
++EXTRAVERSION = -eudyptula
+ NAME = 💕 Valentine's Day Edition 💕
+ 
+ # *DOCUMENTATION*
+-- 
+2.29.2
+
