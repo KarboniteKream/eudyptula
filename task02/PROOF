@@ -1,0 +1,8 @@
+[klemen@nNa-Laptop linux]$ grep CONFIG_LOCALVERSION_AUTO .config
+CONFIG_LOCALVERSION_AUTO=y
+[klemen@nNa-Laptop linux]$ uname -a
+Linux nNa-Laptop 5.11.0 #1 SMP Sat Feb 20 09:32:38 JST 2021 x86_64 x86_64 x86_64 GNU/Linux
+[klemen@nNa-Laptop linux]$ dmesg | head -2
+[    0.000000] Linux version 5.11.0 (klemen@nNa-Laptop) (gcc (GCC) 10.2.1 20201125 (Red Hat 10.2.1-9), GNU ld version 2.35-18.fc33) #1 SMP Sat Feb 20 09:32:38 JST 2021
+[    0.000000] Command line: BOOT_IMAGE=(hd0,gpt2)/vmlinuz-5.11.0 root=UUID=8d8bed58-eb72-49fc-a222-1178e6d2344a ro rootflags=subvol=root rhgb quiet
+[klemen@nNa-Laptop linux]$ 
