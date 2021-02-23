@@ -1,0 +1,23 @@
+[klemen@nNa-Laptop task05]$ sudo make modules_install
+make -C /lib/modules/`uname -r`/build M=$PWD modules_install
+make[1]: Entering directory '/home/klemen/linux'
+  INSTALL /home/klemen/eudyptula/task05/hello.ko
+  DEPMOD  5.11.0-eudyptula-00001-g4648a777c5c4
+make[1]: Leaving directory '/home/klemen/linux'
+[klemen@nNa-Laptop linux]$ lsmod | grep hello
+[klemen@nNa-Laptop linux]$ dmesg -w
+[18702.980386] usb 1-2: new full-speed USB device number 13 using xhci_hcd
+[18703.107170] usb 1-2: New USB device found, idVendor=04d9, idProduct=0207, bcdDevice=11.01
+[18703.107182] usb 1-2: New USB device strings: Mfr=0, Product=1, SerialNumber=0
+[18703.107188] usb 1-2: Product: USB-HID Keyboard
+[18703.110677] input: USB-HID Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.0/0003:04D9:0207.0019/input/input54
+[18703.162269] hid-generic 0003:04D9:0207.0019: input,hidraw0: USB HID v1.11 Keyboard [USB-HID Keyboard] on usb-0000:00:14.0-2/input0
+[18703.162945] hid-generic 0003:04D9:0207.001A: hiddev96,hidraw1: USB HID v1.11 Device [USB-HID Keyboard] on usb-0000:00:14.0-2/input1
+[18703.163676] input: USB-HID Keyboard System Control as /devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.2/0003:04D9:0207.001B/input/input55
+[18703.215149] input: USB-HID Keyboard Consumer Control as /devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.2/0003:04D9:0207.001B/input/input56
+[18703.215397] input: USB-HID Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.2/0003:04D9:0207.001B/input/input57
+[18703.215841] hid-generic 0003:04D9:0207.001B: input,hidraw2: USB HID v1.11 Keyboard [USB-HID Keyboard] on usb-0000:00:14.0-2/input2
+[18703.238787] Hello World!
+[klemen@nNa-Laptop linux]$ lsmod | grep hello
+hello                  20480  0
+[klemen@nNa-Laptop linux]$ 
