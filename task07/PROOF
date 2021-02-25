@@ -1,0 +1,17 @@
+[klemen@nNa-Laptop linux-next]$ cp ../linux/.config .config
+[klemen@nNa-Laptop linux-next]$ make olddefconfig
+...
+[klemen@nNa-Laptop linux-next]$ git log --oneline -1
+7f206cf3ec2b (HEAD -> master, tag: next-20210225, origin/master, origin/HEAD) Add linux-next specific files for 20210225
+[klemen@nNa-Laptop linux-next]$ make -j8
+...
+[klemen@nNa-Laptop linux-next]$ sudo make modules_install
+[klemen@nNa-Laptop linux-next]$ sudo make install
+sh ./arch/x86/boot/install.sh 5.11.0-next-20210225 arch/x86/boot/bzImage \
+	System.map "/boot"
+[klemen@nNa-Laptop linux-next]$ ~/.bin/sbsign /boot/vmlinuz-5.11.0-next-20210225
+Signing Unsigned original image
+[klemen@nNa-Laptop linux-next]$ sudo reboot
+[klemen@nNa-Laptop ~]$ uname -a
+Linux nNa-Laptop 5.11.0-next-20210225 #1 SMP Thu Feb 25 18:37:59 JST 2021 x86_64 x86_64 x86_64 GNU/Linux
+[klemen@nNa-Laptop ~]$
