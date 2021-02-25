@@ -1,0 +1,16 @@
+[klemen@nNa-Laptop task06]$ ls -lh /dev/eudyptula
+ls: cannot access '/dev/eudyptula': No such file or directory
+[klemen@nNa-Laptop task06]$ sudo modprobe eudyptula
+[klemen@nNa-Laptop task06]$ ls -lh /dev/eudyptula
+crw-------. 1 root root 10, 123 Feb 24 22:27 /dev/eudyptula
+[root@nNa-Laptop ~]# cat /dev/eudyptula
+2dfea3d4488b
+[root@nNa-Laptop ~]# echo 'foo' > /dev/eudyptula
+-bash: echo: write error: Invalid argument
+[root@nNa-Laptop ~]# echo '2dfea3d4488b' > /dev/eudyptula
+-bash: echo: write error: Invalid argument
+[root@nNa-Laptop ~]# echo -n '2dfea3d4488b' > /dev/eudyptula
+[root@nNa-Laptop ~]# sudo modprobe -r eudyptula
+[root@nNa-Laptop ~]# ls -lh /dev/eudyptula
+ls: cannot access '/dev/eudyptula': No such file or directory
+[root@nNa-Laptop ~]#
