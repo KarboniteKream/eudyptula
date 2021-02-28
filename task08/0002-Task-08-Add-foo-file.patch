@@ -1,0 +1,83 @@
+From c5b29476a919e8d0ceda38f6942fa08e4cdf680b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Klemen=20Ko=C5=A1ir?= <klemen.kosir@kream.io>
+Date: Sat, 27 Feb 2021 18:55:11 +0900
+Subject: [PATCH 2/2] Task 08: Add foo file
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Klemen Košir <klemen.kosir@kream.io>
+---
+ eudyptula.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/eudyptula.c b/eudyptula.c
+index bf3f011..c7c9001 100644
+--- a/eudyptula.c
++++ b/eudyptula.c
+@@ -5,6 +5,7 @@
+ #include <linux/init.h>
+ #include <linux/jiffies.h>
+ #include <linux/module.h>
++#include <linux/mutex.h>
+ 
+ MODULE_AUTHOR("Klemen Košir <klemen.kosir@kream.io>");
+ MODULE_DESCRIPTION("A simple Linux module");
+@@ -15,6 +16,10 @@ static struct dentry *root;
+ static const char id[] = "2dfea3d4488b";
+ #define ID_LENGTH ARRAY_SIZE(id)
+ 
++#define DATA_SIZE PAGE_SIZE
++static char data[DATA_SIZE];
++static DEFINE_MUTEX(data_lock);
++
+ static ssize_t id_read(struct file *file, char __user *buf,
+ 		       size_t count, loff_t *ppos)
+ {
+@@ -45,12 +50,43 @@ static const struct file_operations id_fops = {
+ 	.write = id_write,
+ };
+ 
++static ssize_t foo_read(struct file *file, char __user *buf,
++			size_t count, loff_t *ppos)
++{
++	ssize_t ret;
++
++	mutex_lock(&data_lock);
++	ret = simple_read_from_buffer(buf, count, ppos, data, DATA_SIZE);
++	mutex_unlock(&data_lock);
++
++	return ret;
++}
++
++static ssize_t foo_write(struct file *file, const char __user *buf,
++			 size_t count, loff_t *ppos)
++{
++	ssize_t ret;
++
++	mutex_lock(&data_lock);
++	ret = simple_write_to_buffer(data, DATA_SIZE, ppos, buf, count);
++	mutex_unlock(&data_lock);
++
++	return ret;
++}
++
++static const struct file_operations foo_fops = {
++	.owner = THIS_MODULE,
++	.read = foo_read,
++	.write = foo_write,
++};
++
+ static int __init eudyptula_init(void)
+ {
+ 	root = debugfs_create_dir("eudyptula", NULL);
+ 
+ 	debugfs_create_file("id", 0666, root, NULL, &id_fops);
+ 	debugfs_create_u64("jiffies", 0444, root, (u64 *)&jiffies);
++	debugfs_create_file("foo", 0644, root, NULL, &foo_fops);
+ 
+ 	return 0;
+ }
+-- 
+2.29.2
+
