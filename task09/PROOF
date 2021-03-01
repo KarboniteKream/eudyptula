@@ -1,0 +1,32 @@
+[klemen@nNa-Laptop task09]$ ls -lh /sys/kernel/eudyptula
+ls: cannot access '/sys/kernel/eudyptula': No such file or directory
+[klemen@nNa-Laptop task09]$ sudo modprobe eudyptula
+[klemen@nNa-Laptop task09]$ ls -lh /sys/kernel/eudyptula
+total 0
+-rw-r--r--. 1 root root 4.0K Mar  1 09:06 foo
+-rw-r--r--. 1 root root 4.0K Mar  1 09:06 id
+-r--r--r--. 1 root root 4.0K Mar  1 09:06 jiffies
+[klemen@nNa-Laptop task09]$ cat /sys/kernel/eudyptula/id
+2dfea3d4488b
+[klemen@nNa-Laptop task09]$ sudo sh -c "echo 'foo' > /sys/kernel/eudyptula/id"
+sh: line 0: echo: write error: Invalid argument
+[klemen@nNa-Laptop task09]$ sudo sh -c "echo '2dfea3d4488b' > /sys/kernel/eudyptula/id"
+sh: line 0: echo: write error: Invalid argument
+[klemen@nNa-Laptop task09]$ sudo sh -c "echo -n '3dfea3d4488b' > /sys/kernel/eudyptula/id"
+sh: line 0: echo: write error: Invalid argument
+[klemen@nNa-Laptop task09]$ sudo sh -c "echo -n '2dfea3d4488b' > /sys/kernel/eudyptula/id"
+[klemen@nNa-Laptop task09]$ cat /sys/kernel/eudyptula/jiffies
+4312335074
+[klemen@nNa-Laptop task09]$ cat /sys/kernel/eudyptula/jiffies
+4312338636
+[klemen@nNa-Laptop task09]$ cat /sys/kernel/eudyptula/foo
+[klemen@nNa-Laptop task09]$ sudo sh -c "echo 'bar' > /sys/kernel/eudyptula/foo"
+[klemen@nNa-Laptop task09]$ cat /sys/kernel/eudyptula/foo
+bar
+[klemen@nNa-Laptop task09]$ sudo sh -c "echo 'baz' > /sys/kernel/eudyptula/foo"
+[klemen@nNa-Laptop task09]$ cat /sys/kernel/eudyptula/foo
+baz
+[klemen@nNa-Laptop task09]$ sudo modprobe -r eudyptula
+[klemen@nNa-Laptop task09]$ ls -lh /sys/kernel/eudyptula
+ls: cannot access '/sys/kernel/eudyptula': No such file or directory
+[klemen@nNa-Laptop task09]$
