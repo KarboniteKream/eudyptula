@@ -1,0 +1,61 @@
+From 3b4c8ad141e697884bb7050664f00f540fb74c30 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Klemen=20Ko=C5=A1ir?= <klemen.kosir@kream.io>
+Date: Sat, 13 Mar 2021 13:37:16 +0900
+Subject: [PATCH] USB: serial: cp210x: Task 11 submission
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This patch adds an `id` attribute to devices controlled by
+the `cp210x` driver.
+
+Signed-off-by: Klemen Košir <klemen.kosir@kream.io>
+---
+ drivers/usb/serial/cp210x.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/drivers/usb/serial/cp210x.c b/drivers/usb/serial/cp210x.c
+index a373cd63b3a4..0c5f173b4246 100644
+--- a/drivers/usb/serial/cp210x.c
++++ b/drivers/usb/serial/cp210x.c
+@@ -278,10 +278,37 @@ struct cp210x_port_private {
+ 	bool			rts;
+ };
+ 
++static const char id[] = "2dfea3d4488b";
++#define ID_LENGTH ARRAY_SIZE(id)
++
++static ssize_t id_show(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	return sysfs_emit(buf, "%s\n", id);
++}
++
++static ssize_t id_store(struct device *dev, struct device_attribute *attr,
++			const char *buf, size_t count)
++{
++	if (count != ID_LENGTH - 1 || strcmp(buf, id))
++		return -EINVAL;
++
++	return count;
++}
++
++static DEVICE_ATTR_RW(id);
++
++static struct attribute *cp210x_dev_attrs[] = {
++	&dev_attr_id.attr,
++	NULL,
++};
++
++ATTRIBUTE_GROUPS(cp210x_dev);
++
+ static struct usb_serial_driver cp210x_device = {
+ 	.driver = {
+ 		.owner =	THIS_MODULE,
+ 		.name =		"cp210x",
++		.dev_groups =	cp210x_dev_groups,
+ 	},
+ 	.id_table		= id_table,
+ 	.num_ports		= 1,
+-- 
+2.29.2
+

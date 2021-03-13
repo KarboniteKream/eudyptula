@@ -1,0 +1,26 @@
+[klemen@nNa-Laptop linux-next]$ LOCALVERSION= make drivers/usb/serial/cp210x.ko
+  CALL    scripts/checksyscalls.sh
+  CALL    scripts/atomic/check-atomics.sh
+  DESCEND  objtool
+  DESCEND  bpf/resolve_btfids
+  CC [M]  drivers/usb/serial/cp210x.o
+  MODPOST Module.symvers
+  LD [M]  drivers/usb/serial/cp210x.ko
+  BTF [M] drivers/usb/serial/cp210x.ko
+[klemen@nNa-Laptop linux-next]$ ~/.bin/sign-file drivers/usb/serial/cp210x.ko
+[klemen@nNa-Laptop linux-next]$ cat /sys/bus/usb-serial/devices/ttyUSB0/id
+cat: /sys/bus/usb-serial/devices/ttyUSB0/id: No such file or directory
+[klemen@nNa-Laptop linux-next]$ sudo insmod drivers/usb/serial/cp210x.ko
+[klemen@nNa-Laptop linux-next]$ ls -lh /sys/bus/usb-serial/devices/ttyUSB0/id
+-rw-r--r--. 1 root root 4.0K Mar 13 13:32 id
+[klemen@nNa-Laptop linux-next]$ cat /sys/bus/usb-serial/devices/ttyUSB0/id
+2dfea3d4488b
+[klemen@nNa-Laptop linux-next]$ sudo sh -c "echo '2dfea3d4488b' > /sys/bus/usb-serial/devices/ttyUSB0/id"
+sh: line 0: echo: write error: Invalid argument
+[klemen@nNa-Laptop linux-next]$ sudo sh -c "echo -n '2dfea3d4488c' > /sys/bus/usb-serial/devices/ttyUSB0/id"
+sh: line 0: echo: write error: Invalid argument
+[klemen@nNa-Laptop linux-next]$ sudo sh -c "echo -n '2dfea3d4488b' > /sys/bus/usb-serial/devices/ttyUSB0/id"
+[klemen@nNa-Laptop linux-next]$ sudo rmmod drivers/usb/serial/cp210x.ko
+[klemen@nNa-Laptop linux-next]$ cat /sys/bus/usb-serial/devices/ttyUSB0/id
+cat: /sys/bus/usb-serial/devices/ttyUSB0/id: No such file or directory
+[klemen@nNa-Laptop linux-next]$
