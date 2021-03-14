@@ -1,0 +1,13 @@
+[klemen@nNa-Laptop task12]$ make
+make -C /lib/modules/`uname -r`/build M=$PWD
+make[1]: Entering directory '/usr/src/kernels/5.10.22-200.fc33.x86_64'
+  CC [M]  /home/klemen/eudyptula/task12/eudyptula.o
+  MODPOST /home/klemen/eudyptula/task12/Module.symvers
+  LD [M]  /home/klemen/eudyptula/task12/eudyptula.ko
+make[1]: Leaving directory '/usr/src/kernels/5.10.22-200.fc33.x86_64'
+[klemen@nNa-Laptop task12]$ sudo insmod eudyptula.ko
+[klemen@nNa-Laptop task12]$ dmesg | tail -2
+[13592.915842] id 3 = Dave
+[13592.915843] id 42 not found
+[klemen@nNa-Laptop task12]$ sudo rmmod eudyptula.ko
+[klemen@nNa-Laptop task12]$
