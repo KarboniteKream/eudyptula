@@ -1,0 +1,66 @@
+From 9c0a7a3b3e86e4f36445c5860a2c7478d12c3f7f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Klemen=20Ko=C5=A1ir?= <klemen.kosir@kream.io>
+Date: Sat, 20 Mar 2021 10:07:05 +0900
+Subject: [PATCH] Task 13 submission
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This patch modifies the module to use `kmem_cache` instead `kmalloc`.
+
+Signed-off-by: Klemen Košir <klemen.kosir@kream.io>
+---
+ eudyptula.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/eudyptula.c b/eudyptula.c
+index 489223c..deda1e2 100644
+--- a/eudyptula.c
++++ b/eudyptula.c
+@@ -19,11 +19,13 @@ struct identity {
+ 
+ static LIST_HEAD(identity_list);
+ 
++static struct kmem_cache *identity_cache;
++
+ int identity_create(char *name, int id)
+ {
+ 	struct identity *entry;
+ 
+-	entry = kzalloc(sizeof(*entry), GFP_KERNEL);
++	entry = kmem_cache_alloc(identity_cache, GFP_KERNEL);
+ 	if (!entry)
+ 		return -ENOMEM;
+ 
+@@ -54,7 +56,7 @@ void identity_destroy(int id)
+ 	list_for_each_entry(entry, &identity_list, list) {
+ 		if (entry->id == id) {
+ 			list_del(&entry->list);
+-			kfree(entry);
++			kmem_cache_free(identity_cache, entry);
+ 			return;
+ 		}
+ 	}
+@@ -65,6 +67,11 @@ static int __init eudyptula_init(void)
+ 	struct identity *temp;
+ 	int ret = 0;
+ 
++	identity_cache = kmem_cache_create("identities", sizeof(struct identity),
++					   0, 0, NULL);
++	if (!identity_cache)
++		return -ENOMEM;
++
+ 	ret = identity_create("Alice", 1);
+ 	if (ret)
+ 		goto out;
+@@ -100,6 +107,7 @@ out:
+ 
+ static void __exit eudyptula_exit(void)
+ {
++	kmem_cache_destroy(identity_cache);
+ }
+ 
+ module_init(eudyptula_init);
+-- 
+2.30.2
+
