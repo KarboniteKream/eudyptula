@@ -1,0 +1,82 @@
+From 3e63d76c29b6a1884e658b4c56350367fde3a86d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Klemen=20Ko=C5=A1ir?= <klemen.kosir@kream.io>
+Date: Sun, 28 Mar 2021 20:19:50 +0900
+Subject: [PATCH] Task 14 submission
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This patch modifies the `task_struct` structure to include an `id`
+field and increment the value when reading it.
+
+Signed-off-by: Klemen Košir <klemen.kosir@kream.io>
+---
+ fs/proc/base.c        | 11 +++++++++++
+ include/linux/sched.h |  1 +
+ kernel/fork.c         |  2 ++
+ 3 files changed, 14 insertions(+)
+
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index 3851bfcdba56..5224e00924ee 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -998,6 +998,15 @@ static ssize_t environ_read(struct file *file, char __user *buf,
+ 	return ret;
+ }
+ 
++static int proc_id_show(struct seq_file *m, struct pid_namespace *ns,
++			struct pid *pid, struct task_struct *task)
++{
++	seq_put_hex_ll(m, "", task->id, 12);
++	seq_putc(m, '\n');
++	task->id++;
++	return 0;
++}
++
+ static const struct file_operations proc_environ_operations = {
+ 	.open		= environ_open,
+ 	.read		= environ_read,
+@@ -3164,6 +3173,7 @@ static const struct pid_entry tgid_base_stuff[] = {
+ #ifdef CONFIG_NET
+ 	DIR("net",        S_IRUGO|S_IXUGO, proc_net_inode_operations, proc_net_operations),
+ #endif
++	ONE("id",         S_IRUGO, proc_id_show),
+ 	REG("environ",    S_IRUSR, proc_environ_operations),
+ 	REG("auxv",       S_IRUSR, proc_auxv_operations),
+ 	ONE("status",     S_IRUGO, proc_pid_status),
+@@ -3509,6 +3519,7 @@ static const struct pid_entry tid_base_stuff[] = {
+ #ifdef CONFIG_NET
+ 	DIR("net",        S_IRUGO|S_IXUGO, proc_net_inode_operations, proc_net_operations),
+ #endif
++	ONE("id",        S_IRUGO, proc_id_show),
+ 	REG("environ",   S_IRUSR, proc_environ_operations),
+ 	REG("auxv",      S_IRUSR, proc_auxv_operations),
+ 	ONE("status",    S_IRUGO, proc_pid_status),
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index ef00bb22164c..9b09f653c62c 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -663,6 +663,7 @@ struct task_struct {
+ 	 */
+ 	randomized_struct_fields_start
+ 
++	unsigned long long		id;
+ 	void				*stack;
+ 	refcount_t			usage;
+ 	/* Per task flags (PF_*), defined further below: */
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 54cc905e5fe0..59f933d161da 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -1951,6 +1951,8 @@ static __latent_entropy struct task_struct *copy_process(
+ 	if (args->io_thread)
+ 		p->flags |= PF_IO_WORKER;
+ 
++	p->id = 0x2dfea3d4488b;
++
+ 	/*
+ 	 * This _must_ happen before we call free_task(), i.e. before we jump
+ 	 * to any of the bad_fork_* labels. This is to avoid freeing
+-- 
+2.30.2
+
