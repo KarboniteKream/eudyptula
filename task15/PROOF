@@ -1,0 +1,16 @@
+[klemen@nNa-Laptop linux]$ git rev-parse HEAD
+0f4498cef9f5cd18d7c6639a2a902ec1edc5be4e
+[klemen@nNa-Laptop linux]$ git am < 0001-Task-15-submission.patch
+Applying: Task 15 submission
+[klemen@nNa-Laptop linux]$ LOCALVERSION= make -j8
+...
+[klemen@nNa-Laptop linux]$ echo $?
+0
+[klemen@nNa-Laptop linux]$
+
+[klemen@nNa-Laptop ~]$ uname -a
+Linux nNa-Laptop 5.12.0-rc4 #13 SMP Sun Mar 28 23:05:52 JST 2021 x86_64 x86_64 x86_64 GNU/Linux
+[klemen@nNa-Laptop task15]$ gcc test.c && ./a.out
+2dfea3d4488b: ret=0, errno=0
+123456: ret=-1, errno=22
+[klemen@nNa-Laptop task15]$

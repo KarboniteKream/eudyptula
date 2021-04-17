@@ -1,0 +1,104 @@
+From 19eb2ad4d34f7f9760a52c7f30d1b8dc7ea31e28 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Klemen=20Ko=C5=A1ir?= <klemen.kosir@kream.io>
+Date: Sun, 28 Mar 2021 23:17:59 +0900
+Subject: [PATCH] Task 15 submission
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This patch adds the `eudyptula()` system call on x86,
+which compares the specified ID to a predetermined value.
+
+Signed-off-by: Klemen Košir <klemen.kosir@kream.io>
+---
+ arch/x86/entry/syscalls/syscall_32.tbl |  1 +
+ arch/x86/entry/syscalls/syscall_64.tbl |  1 +
+ arch/x86/kernel/Makefile               |  2 ++
+ arch/x86/kernel/eudyptula.c            | 14 ++++++++++++++
+ include/linux/syscalls.h               |  2 ++
+ kernel/sys_ni.c                        |  1 +
+ 6 files changed, 21 insertions(+)
+ create mode 100644 arch/x86/kernel/eudyptula.c
+
+diff --git a/arch/x86/entry/syscalls/syscall_32.tbl b/arch/x86/entry/syscalls/syscall_32.tbl
+index a1c9f496fca6..8da82c2aaa42 100644
+--- a/arch/x86/entry/syscalls/syscall_32.tbl
++++ b/arch/x86/entry/syscalls/syscall_32.tbl
+@@ -447,3 +447,4 @@
+ 440	i386	process_madvise		sys_process_madvise
+ 441	i386	epoll_pwait2		sys_epoll_pwait2		compat_sys_epoll_pwait2
+ 442	i386	mount_setattr		sys_mount_setattr
++443	i386	eudyptula		sys_eudyptula
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index 7bf01cbe582f..147439ffe2d4 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -364,6 +364,7 @@
+ 440	common	process_madvise		sys_process_madvise
+ 441	common	epoll_pwait2		sys_epoll_pwait2
+ 442	common	mount_setattr		sys_mount_setattr
++443	common	eudyptula		sys_eudyptula
+ 
+ #
+ # Due to a historical design error, certain syscalls are numbered differently
+diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
+index 2ddf08351f0b..d23c4a45e0df 100644
+--- a/arch/x86/kernel/Makefile
++++ b/arch/x86/kernel/Makefile
+@@ -150,6 +150,8 @@ obj-$(CONFIG_UNWINDER_FRAME_POINTER)	+= unwind_frame.o
+ obj-$(CONFIG_UNWINDER_GUESS)		+= unwind_guess.o
+ 
+ obj-$(CONFIG_AMD_MEM_ENCRYPT)		+= sev-es.o
++
++obj-y					+= eudyptula.o
+ ###
+ # 64 bit specific files
+ ifeq ($(CONFIG_X86_64),y)
+diff --git a/arch/x86/kernel/eudyptula.c b/arch/x86/kernel/eudyptula.c
+new file mode 100644
+index 000000000000..84d972ebdf9c
+--- /dev/null
++++ b/arch/x86/kernel/eudyptula.c
+@@ -0,0 +1,14 @@
++// SPDX-License-Identifier: GPL-2.0
++
++#include <linux/syscalls.h>
++#include <linux/types.h>
++
++SYSCALL_DEFINE2(eudyptula, unsigned int, high_id, unsigned int, low_id)
++{
++	u64 id = ((u64)high_id << 32) | low_id;
++
++	if (id != 0x2dfea3d4488b)
++		return -EINVAL;
++
++	return 0;
++}
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 2839dc9a7c01..ac497a504da3 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1046,6 +1046,8 @@ asmlinkage long sys_pidfd_getfd(int pidfd, int fd, unsigned int flags);
+  * Architecture-specific system calls
+  */
+ 
++asmlinkage long sys_eudyptula(unsigned int high_id, unsigned int low_id);
++
+ /* arch/x86/kernel/ioport.c */
+ asmlinkage long sys_ioperm(unsigned long from, unsigned long num, int on);
+ 
+diff --git a/kernel/sys_ni.c b/kernel/sys_ni.c
+index 19aa806890d5..9920b740dd6a 100644
+--- a/kernel/sys_ni.c
++++ b/kernel/sys_ni.c
+@@ -352,6 +352,7 @@ COND_SYSCALL(pkey_mprotect);
+ COND_SYSCALL(pkey_alloc);
+ COND_SYSCALL(pkey_free);
+ 
++COND_SYSCALL(eudyptula);
+ 
+ /*
+  * Architecture specific weak syscall entries.
+-- 
+2.30.2
+
