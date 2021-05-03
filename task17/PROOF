@@ -1,0 +1,14 @@
+[klemen@nNa-Laptop task17]$ ls -lh /dev/eudyptula
+ls: cannot access '/dev/eudyptula': No such file or directory
+[klemen@nNa-Laptop task17]$ ps aux | grep eudyptul[a]
+[klemen@nNa-Laptop task17]$ sudo insmod eudyptula.ko
+[klemen@nNa-Laptop task17]$ ls -lh /dev/eudyptula
+c-w--w--w-. 1 root root 10, 123 May  3 17:07 /dev/eudyptula
+[klemen@nNa-Laptop task17]$ echo -n "2dfea3d4488b" > /dev/eudyptula
+[klemen@nNa-Laptop task17]$ ps aux | grep eudyptul[a]
+root        5811  0.0  0.0      0     0 ?        D    17:07   0:00 [eudyptula]
+[klemen@nNa-Laptop task17]$ sudo rmmod eudyptula.ko
+[klemen@nNa-Laptop task17]$ ls -lh /dev/eudyptula
+ls: cannot access '/dev/eudyptula': No such file or directory
+[klemen@nNa-Laptop task17]$ ps aux | grep eudyptul[a]
+[klemen@nNa-Laptop task17]$
