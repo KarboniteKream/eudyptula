@@ -1,0 +1,17 @@
+[klemen@nNa-Laptop task18]$ ls -lh /dev/eudyptula
+ls: cannot access '/dev/eudyptula': No such file or directory
+[klemen@nNa-Laptop task18]$ sudo insmod eudyptula.ko
+[klemen@nNa-Laptop task18]$ echo -n "ThisNameIsExtremelyLong" > /dev/eudyptula
+[klemen@nNa-Laptop task18]$ echo -n "Alice" > /dev/eudyptula && echo -n "Dave" > /dev/eudyptula
+[klemen@nNa-Laptop task18]$ sleep 15
+[klemen@nNa-Laptop task18]$ echo -n "Bob" > /dev/eudyptula & echo -n "Claire" > /dev/eudyptula &
+...
+[klemen@nNa-Laptop task18]$ sudo rmmod eudyptula.ko
+[klemen@nNa-Laptop task18]$ dmesg | tail -4
+[ 5478.070950] id 1 = ThisNameIsExtremely
+[ 5495.992147] id 2 = Alice
+[ 5501.111022] id 3 = Dave
+[ 5523.582115] id 4 = Bob
+[klemen@nNa-Laptop task18]$ ls -lh /dev/eudyptula
+ls: cannot access '/dev/eudyptula': No such file or directory
+[klemen@nNa-Laptop task18]$
