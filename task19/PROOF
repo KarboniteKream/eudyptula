@@ -1,0 +1,11 @@
+[klemen@nNa-Laptop task19]$ sudo insmod eudyptula.ko
+[klemen@nNa-Laptop task19]$ dmesg | tail -2
+[   38.577836] rfkill: input handler disabled
+[ 1662.664172] eudyptula: loading out-of-tree module taints kernel.
+[klemen@nNa-Laptop task19]$ curl -s http://httpbin.org/get?id=2dfea3d4488b > /dev/null
+[klemen@nNa-Laptop task19]$ curl -s http://httpbin.org/get?id=2dfea3d4488 > /dev/null
+[klemen@nNa-Laptop task19]$ dmesg | tail -2
+[ 1662.664172] eudyptula: loading out-of-tree module taints kernel.
+[ 1667.443605] Detected 2dfea3d4488b
+[klemen@nNa-Laptop task19]$ sudo rmmod eudyptula.ko
+[klemen@nNa-Laptop task19]$
