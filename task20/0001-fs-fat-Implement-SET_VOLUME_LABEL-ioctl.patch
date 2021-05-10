@@ -1,0 +1,197 @@
+From 466dcff77da33bd0ca7c0c3be00030e5ea762cba Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Klemen=20Ko=C5=A1ir?= <klemen.kosir@kream.io>
+Date: Sun, 9 May 2021 09:40:07 +0900
+Subject: [PATCH] fs: fat: Implement SET_VOLUME_LABEL ioctl
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This patch implements a FAT_IOCTL_SET_VOLUME_LABEL command. It supports
+FAT16 and FAT32, and behaves similarly to `fatlabel`.
+
+We make sure to update both partition and directory volume labels.
+
+Signed-off-by: Klemen Košir <klemen.kosir@kream.io>
+---
+ fs/fat/dir.c                  | 24 +++++++++
+ fs/fat/fat.h                  |  1 +
+ fs/fat/file.c                 | 96 +++++++++++++++++++++++++++++++++++
+ include/uapi/linux/msdos_fs.h |  1 +
+ 4 files changed, 122 insertions(+)
+
+diff --git a/fs/fat/dir.c b/fs/fat/dir.c
+index c4a274285858..b95f9cd64cfe 100644
+--- a/fs/fat/dir.c
++++ b/fs/fat/dir.c
+@@ -991,6 +991,30 @@ int fat_scan_logstart(struct inode *dir, int i_logstart,
+ 	return -ENOENT;
+ }
+ 
++/*
++ * Scans a directory for a volume label entry.
++ * Returns an error code or zero.
++ */
++int fat_scan_volume(struct inode *dir, struct fat_slot_info *sinfo)
++{
++	struct super_block *sb = dir->i_sb;
++
++	sinfo->slot_off = 0;
++	sinfo->bh = NULL;
++
++	while (fat_get_entry(dir, &sinfo->slot_off, &sinfo->bh, &sinfo->de) >= 0) {
++		if (sinfo->de->attr & ATTR_VOLUME) {
++			sinfo->slot_off -= sizeof(*sinfo->de);
++			sinfo->nr_slots = 1;
++			sinfo->i_pos = fat_make_i_pos(sb, sinfo->bh, sinfo->de);
++			return 0;
++		}
++	}
++
++	return -ENOENT;
++}
++EXPORT_SYMBOL_GPL(fat_scan_volume);
++
+ static int __fat_remove_entries(struct inode *dir, loff_t pos, int nr_slots)
+ {
+ 	struct super_block *sb = dir->i_sb;
+diff --git a/fs/fat/fat.h b/fs/fat/fat.h
+index 02d4d4234956..614083d57b4c 100644
+--- a/fs/fat/fat.h
++++ b/fs/fat/fat.h
+@@ -330,6 +330,7 @@ extern int fat_scan(struct inode *dir, const unsigned char *name,
+ 		    struct fat_slot_info *sinfo);
+ extern int fat_scan_logstart(struct inode *dir, int i_logstart,
+ 			     struct fat_slot_info *sinfo);
++extern int fat_scan_volume(struct inode *dir, struct fat_slot_info *sinfo);
+ extern int fat_get_dotdot_entry(struct inode *dir, struct buffer_head **bh,
+ 				struct msdos_dir_entry **de);
+ extern int fat_alloc_new_dir(struct inode *dir, struct timespec64 *ts);
+diff --git a/fs/fat/file.c b/fs/fat/file.c
+index 13855ba49cd9..124b3b8b76ee 100644
+--- a/fs/fat/file.c
++++ b/fs/fat/file.c
+@@ -122,6 +122,100 @@ static int fat_ioctl_get_volume_id(struct inode *inode, u32 __user *user_attr)
+ 	return put_user(sbi->vol_id, user_attr);
+ }
+ 
++static int fat_ioctl_set_volume_label(struct inode *inode, char __user *user_attr)
++{
++	struct super_block *sb = inode->i_sb;
++	struct msdos_sb_info *sbi = MSDOS_SB(sb);
++
++	struct buffer_head *bh1, *bh2;
++	struct fat_boot_sector *b;
++	struct fat_slot_info sinfo;
++	struct msdos_dir_entry de;
++	struct inode *node;
++	struct timespec64 ts;
++	__le16 time, date;
++	int err;
++
++	char label[MSDOS_NAME];
++	size_t len;
++
++	if (copy_from_user(label, user_attr, MSDOS_NAME))
++		return -EFAULT;
++
++	/* Volume label should be padded with spaces. */
++	len = strlen(label);
++	memset(&label[len], 0x20, MSDOS_NAME - len);
++
++	if (sb_rdonly(sb) || sbi->dirty)
++		return -EROFS;
++
++	bh1 = sb_bread(sb, 0);
++	if (!bh1)
++		return -EIO;
++
++	b = (struct fat_boot_sector *)bh1->b_data;
++	if (is_fat32(sbi)) {
++		bh2 = sb_bread(sb, b->fat32.backup_boot);
++		if (!bh2)
++			return -EIO;
++
++		memcpy(&b->fat32.vol_label, label, MSDOS_NAME);
++		b = (struct fat_boot_sector *)bh2->b_data;
++		memcpy(&b->fat32.vol_label, label, MSDOS_NAME);
++
++		mark_buffer_dirty(bh2);
++		sync_dirty_buffer(bh2);
++		brelse(bh2);
++	} else {
++		memcpy(&b->fat16.vol_label, label, MSDOS_NAME);
++	}
++
++	mark_buffer_dirty(bh1);
++	sync_dirty_buffer(bh1);
++	brelse(bh1);
++
++	ts = current_time(inode);
++	mutex_lock(&sbi->s_lock);
++
++	if (fat_scan_volume(inode, &sinfo)) {
++		node = inode;
++
++		memcpy(de.name, label, MSDOS_NAME);
++		de.attr = ATTR_VOLUME;
++		de.lcase = 0;
++		fat_time_unix2fat(sbi, &ts, &time, &date, NULL);
++		de.cdate = 0;
++		de.adate = 0;
++		de.ctime = 0;
++		de.ctime_cs = 0;
++		de.time = time;
++		de.date = date;
++		fat_set_start(&de, 0);
++		de.size = 0;
++
++		err = fat_add_entries(node, &de, 1, &sinfo);
++		if (err)
++			return err;
++
++		fat_truncate_time(node, &ts, S_CTIME | S_MTIME);
++	} else {
++		memcpy(sinfo.de->name, label, MSDOS_NAME);
++		node = fat_build_inode(sb, sinfo.de, sinfo.i_pos);
++		fat_truncate_time(node, &ts, S_ATIME | S_MTIME);
++		iput(node);
++	}
++
++	brelse(sinfo.bh);
++	mutex_unlock(&sbi->s_lock);
++
++	if (IS_DIRSYNC(node))
++		(void)fat_sync_inode(node);
++	else
++		mark_inode_dirty(node);
++
++	return 0;
++}
++
+ static int fat_ioctl_fitrim(struct inode *inode, unsigned long arg)
+ {
+ 	struct super_block *sb = inode->i_sb;
+@@ -165,6 +259,8 @@ long fat_generic_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 		return fat_ioctl_set_attributes(filp, user_attr);
+ 	case FAT_IOCTL_GET_VOLUME_ID:
+ 		return fat_ioctl_get_volume_id(inode, user_attr);
++	case FAT_IOCTL_SET_VOLUME_LABEL:
++		return fat_ioctl_set_volume_label(inode, (char __user *)user_attr);
+ 	case FITRIM:
+ 		return fat_ioctl_fitrim(inode, arg);
+ 	default:
+diff --git a/include/uapi/linux/msdos_fs.h b/include/uapi/linux/msdos_fs.h
+index a5773899f4d9..dfcad9c27b36 100644
+--- a/include/uapi/linux/msdos_fs.h
++++ b/include/uapi/linux/msdos_fs.h
+@@ -104,6 +104,7 @@ struct __fat_dirent {
+ #define FAT_IOCTL_SET_ATTRIBUTES	_IOW('r', 0x11, __u32)
+ /*Android kernel has used 0x12, so we use 0x13*/
+ #define FAT_IOCTL_GET_VOLUME_ID		_IOR('r', 0x13, __u32)
++#define FAT_IOCTL_SET_VOLUME_LABEL	_IOW('r', 0x14, char *)
+ 
+ struct fat_boot_sector {
+ 	__u8	ignored[3];	/* Boot strap short or near jump */
+-- 
+2.31.1
+

@@ -1,0 +1,51 @@
+[klemen@nNa-Laptop task20]$ dd if=/dev/zero of=fat16.img bs=1024 count=1024
+1024+0 records in
+1024+0 records out
+1048576 bytes (1.0 MB, 1.0 MiB) copied, 0.00804558 s, 130 MB/s
+[klemen@nNa-Laptop task20]$ mkfs.fat fat16.img
+mkfs.fat 4.2 (2021-01-31)
+[klemen@nNa-Laptop task20]$ fatlabel fat16.img
+[klemen@nNa-Laptop task20]$ mount -o loop fat16.img mnt && ./test mnt EUDYPTULA && umount mnt
+ret=0, errno=0
+[klemen@nNa-Laptop task20]$ fatlabel fat16.img
+EUDYPTULA
+[klemen@nNa-Laptop task20]$ mount -o loop fat16.img mnt && ./test mnt LITTLE && umount mnt
+ret=0, errno=0
+[klemen@nNa-Laptop task20]$ fatlabel fat16.img
+LITTLE
+[klemen@nNa-Laptop task20]$ hexdump -C fat16.img | grep -C 1 LITTL
+00000010  02 00 02 00 08 f8 02 00  10 00 02 00 00 00 00 00  |................|
+00000020  00 00 00 00 80 00 29 ec  96 ec 38 4c 49 54 54 4c  |......)...8LITTL|
+00000030  45 20 20 20 20 20 46 41  54 31 32 20 20 20 0e 1f  |E     FAT12   ..|
+--
+*
+00000a00  4c 49 54 54 4c 45 20 20  20 20 20 08 00 00 00 00  |LITTLE     .....|
+00000a10  21 00 a9 52 00 00 21 47  a9 52 00 00 00 00 00 00  |!..R..!G.R......|
+[klemen@nNa-Laptop task20]$ dd if=/dev/zero of=fat32.img bs=1024 count=38400
+38400+0 records in
+38400+0 records out
+39321600 bytes (39 MB, 38 MiB) copied, 0.053634 s, 733 MB/s
+[klemen@nNa-Laptop task20]$ mkfs.fat -F 32 fat32.img
+mkfs.fat 4.2 (2021-01-31)
+[klemen@nNa-Laptop task20]$ fatlabel fat32.img
+[klemen@nNa-Laptop task20]$ mount -o loop fat32.img mnt && ./test mnt EUDYPTULA && umount mnt
+ret=0, errno=0
+[klemen@nNa-Laptop task20]$ fatlabel fat32.img
+EUDYPTULA
+[klemen@nNa-Laptop task20]$ mount -o loop fat32.img mnt && ./test mnt LITTLE && umount mnt
+ret=0, errno=0
+[klemen@nNa-Laptop task20]$ fatlabel fat32.img
+LITTLE
+[klemen@nNa-Laptop task20]$ hexdump -C fat32.img | grep -C 1 LITTL
+00000030  01 00 06 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000040  80 00 29 31 e8 eb 4e 4c  49 54 54 4c 45 20 20 20  |..)1..NLITTLE   |
+00000050  20 20 46 41 54 33 32 20  20 20 0e 1f be 77 7c ac  |  FAT32   ...w|.|
+--
+00000c30  01 00 06 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000c40  80 00 29 31 e8 eb 4e 4c  49 54 54 4c 45 20 20 20  |..)1..NLITTLE   |
+00000c50  20 20 46 41 54 33 32 20  20 20 0e 1f be 77 7c ac  |  FAT32   ...w|.|
+--
+*
+00097c00  4c 49 54 54 4c 45 20 20  20 20 20 08 00 00 00 00  |LITTLE     .....|
+00097c10  21 00 a9 52 00 00 81 48  a9 52 00 00 00 00 00 00  |!..R...H.R......|
+[klemen@nNa-Laptop task20]$
